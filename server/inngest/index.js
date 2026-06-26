@@ -51,5 +51,80 @@ const syncUserUpdation = inngest.createFunction(
     }
 )
 
+// Inngest function to save workspace data to a database
+
+const syncWorkspaceCreation = inngest.createFunction(
+    {id: 'sync-worksapce-from-clerk'},
+    {event: 'clerk/organization.created'},
+    async ({event}) => {
+        const {data} = event
+        await prisma.worksapce.create({
+            data: {
+                id: data.id,
+                name: data.name,
+                slug: data.slug,
+                ownerId: data.created_by,
+                image_url: data.image_url,
+            }
+        })
+
+        // Add creator as an ADMIN member
+        await prisma.workspaceMember.create({
+            userId: data.created_by,
+            worksapceId: data.id,
+            role: "ADMIN"
+        })
+    }
+)
+
+// Inngest function to update workspace on a database
+const syncWorkspaceUpdation = inngest.createFunction(
+    {id: 'update-worksapce-from-clerk'},
+    {event: 'clerk/organization.updated'},
+    async ({event}) => {
+        const {data} = event
+        await prisma.workspace.update({
+            where: {
+                id: data.id
+            },
+            data: {
+                name: data.name,
+                slug: data.slug,
+                image_url: data.image_url,
+            }
+            })
+    }
+)
+
+// Inngest function to delete workspace from database
+const syncWorkspaceDeletion = inngest.createFunction(
+    {id: 'delete-worksapce-from-clerk'},
+    {event: 'clerk/organization.deleted'},
+    async ({event}) => {
+        const {data} = event;
+        await prisma.workspace.delete({
+            where: {
+                id: data.id
+            }
+        })
+    }
+)
+
+// Inngest function to save workspace member data to a database
+const syncWorkspaceMemberCreation = inngest.createFunction(
+    {id: 'sync-worksapce-member-from-clerk'},
+    {event: 'clerk/organizationInvitation.accepted'},
+    async ({event}) => {
+        const {data} = event
+        await prisma.workspaceMember.create({
+            data: {
+                userId: data.user_id,
+                workspaceId: data.organization_id,
+                id: String(data.role_name).toUpperCase(),
+            }
+        })
+    }
+)
+
 // Create an empty array where we'll export future Inngest functions
-export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdation];
+export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdation, syncWorkspaceCreation ,syncWorkspaceDeletion, syncWorkspaceMemberCreation, syncWorkspaceUpdation];
