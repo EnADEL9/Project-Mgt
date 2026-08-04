@@ -22,9 +22,9 @@ app.use("/api/inngest", serve({ client: inngest, functions }))
 
 // Routes
 app.use('/api/workspaces', protect, workspaceRouter)
-app.use('.api/projects', protect, projectRouter)
-app.use('.api/tasks', protect, taskRouter)
-app.use('.api/comments', protect, commentRouter)
+app.use('/api/projects', protect, projectRouter)
+app.use('/api/tasks', protect, taskRouter)
+app.use('/api/comments', protect, commentRouter)
 
 const PORT = process.env.PORT || 5000
 

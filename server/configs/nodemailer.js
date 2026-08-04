@@ -1,6 +1,4 @@
-import nodemailer from 'nodemailer'
-
-const nodemailer = require("nodemailer");
+import nodemailer from "nodemailer";
 
 // Create a transporter using SMTP
 const transporter = nodemailer.createTransport({
@@ -11,22 +9,23 @@ const transporter = nodemailer.createTransport({
         pass: process.env.SMTP_PASS,
     },
 });
+
 const sendEmail = async({ to, subject, body }) => {
     try {
         const info = await transporter.sendMail({
             from: process.env.SENDER_EMAIL,
             to,
             subject,
-            html: boy,
+            html: body,
         });
 
-        console.log("Message sent: %s", info.messageId);
-        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-        return info
+        console.log("Message sent:", info.messageId);
+
+        return info;
     } catch (err) {
         console.error("Error while sending mail:", err);
-        return
+        return null;
     }
-}
+};
 
-export default sendEmail
+export default sendEmail;

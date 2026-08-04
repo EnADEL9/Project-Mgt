@@ -1,5 +1,5 @@
 import { profileEnd } from "node:console"
-import prisma from "../configs/prisma"
+import prisma from "../configs/prisma.js"
 
 
 export const addComment = async(req, res) => {
