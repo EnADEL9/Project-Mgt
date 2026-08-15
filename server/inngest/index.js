@@ -48,7 +48,7 @@ const syncUserCreation = inngest.createFunction(
       }
     });
 
-    return { success: true, user };
+    return { success: true, user }
   }
 );
 
