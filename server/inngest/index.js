@@ -6,25 +6,23 @@ import sendEmail from '../configs/nodemailer.js'
 export const inngest = new Inngest({ id: "project-management" });
 
 // A function to save user to the database
-const syncUserCreation = inngest.createFunction(
-    { id: 'sync-user-from-clerk', triggers: { event: 'clerk/user.created' } },
-    async ({ event }) => {
+const syncUserCreation = inngest.createFunction({ id: 'sync-user-from-clerk', triggers: { event: 'clerk/user.created' } },
+    async({ event }) => {
         const { data } = event
         await prisma.user.create({
             data: {
                 id: data.id,
-                email: data?.email_addresses[0]?.email_address,
-                name: data?.first_name + " " + data?.last_name,
-                image: data?.image_url
+                email: data ? .email_addresses[0] ? .email_address,
+                name: data ? .first_name + " " + data ? .last_name,
+                image: data ? .image_url
             }
         })
     }
 )
 
 // A function to delete user from database
-const syncUserDeletion = inngest.createFunction(
-    { id: 'delete-user-with-clerk', triggers: { event: 'clerk/user.deleted' } },
-    async ({ event }) => {
+const syncUserDeletion = inngest.createFunction({ id: 'delete-user-with-clerk', triggers: { event: 'clerk/user.deleted' } },
+    async({ event }) => {
         const { data } = event
         await prisma.user.delete({
             where: {
@@ -35,26 +33,24 @@ const syncUserDeletion = inngest.createFunction(
 )
 
 // A function to update user in database
-const syncUserUpdation = inngest.createFunction(
-    { id: 'update-user-from-clerk', triggers: { event: 'clerk/user.updated' } },
-    async ({ event }) => {
-        const { data } = event
-        await prisma.user.update({
-            where: {
-                id: data.id,
-            },
-            data: {
-                email: data?.email_addresses[0]?.email_address,
-                name: data?.first_name + " " + data?.last_name,
-                image: data?.image_url
-            }
-        })
-    }
-)
-// Inngest function to save workspace data to a database
-const syncWorkspaceCreation = inngest.createFunction(
-    { id: 'sync-workspace-from-clerk', triggers: { event: 'clerk/organization.created' } },
-    async ({ event }) => {
+const syncUserUpdation = inngest.createFunction({ id: 'update-user-from-clerk', triggers: { event: 'clerk/user.updated' } },
+        async({ event }) => {
+            const { data } = event
+            await prisma.user.update({
+                where: {
+                    id: data.id,
+                },
+                data: {
+                    email: data ? .email_addresses[0] ? .email_address,
+                    name: data ? .first_name + " " + data ? .last_name,
+                    image: data ? .image_url
+                }
+            })
+        }
+    )
+    // Inngest function to save workspace data to a database
+const syncWorkspaceCreation = inngest.createFunction({ id: 'sync-workspace-from-clerk', triggers: { event: 'clerk/organization.created' } },
+    async({ event }) => {
         const { data } = event
         await prisma.workspace.create({
             data: {
@@ -78,9 +74,8 @@ const syncWorkspaceCreation = inngest.createFunction(
 )
 
 // Inngest function to update workspace on a database
-const syncWorkspaceUpdation = inngest.createFunction(
-    { id: 'update-workspace-from-clerk', triggers: { event: 'clerk/organization.updated' } },
-    async ({ event }) => {
+const syncWorkspaceUpdation = inngest.createFunction({ id: 'update-workspace-from-clerk', triggers: { event: 'clerk/organization.updated' } },
+    async({ event }) => {
         const { data } = event
         await prisma.workspace.update({
             where: {
@@ -96,9 +91,8 @@ const syncWorkspaceUpdation = inngest.createFunction(
 )
 
 // Inngest function to delete workspace from database
-const syncWorkspaceDeletion = inngest.createFunction(
-    { id: 'delete-workspace-from-clerk', triggers: { event: 'clerk/organization.deleted' } },
-    async ({ event }) => {
+const syncWorkspaceDeletion = inngest.createFunction({ id: 'delete-workspace-from-clerk', triggers: { event: 'clerk/organization.deleted' } },
+    async({ event }) => {
         const { data } = event;
         await prisma.workspace.delete({
             where: {
@@ -109,9 +103,8 @@ const syncWorkspaceDeletion = inngest.createFunction(
 )
 
 // Inngest function to save workspace member data to a database
-const syncWorkspaceMemberCreation = inngest.createFunction(
-    { id: 'sync-workspace-member-from-clerk', triggers: { event: 'clerk/organizationInvitation.accepted' } },
-    async ({ event }) => {
+const syncWorkspaceMemberCreation = inngest.createFunction({ id: 'sync-workspace-member-from-clerk', triggers: { event: 'clerk/organizationInvitation.accepted' } },
+    async({ event }) => {
         const { data } = event
         await prisma.workspaceMember.create({
             data: {
@@ -123,74 +116,71 @@ const syncWorkspaceMemberCreation = inngest.createFunction(
     }
 )
 
-const sendTaskAssignmentEmail = inngest.createFunction(
-    {
-      id: "send-task-assignment-email",
-      triggers: [
-        {
-          event: "app/task.assigned",
-        },
-      ],
+const sendTaskAssignmentEmail = inngest.createFunction({
+        id: "send-task-assignment-mail",
+        triggers: [{
+            event: "app/task.assigned",
+        }, ],
     },
-    async ({ event, step }) => {
-      const { taskId, origin } = event.data;
-  
-      const task = await prisma.task.findUnique({
-        where: { id: taskId },
-        include: {
-          assignee: true,
-          project: true,
-        },
-      });
-  
-      if (!task) return;
-  
-      await sendEmail({
-        to: task.assignee.email,
-        subject: `New task assignment in ${task.project.name}`,
-        body: `
+    async({ event, step }) => {
+        const { taskId, origin } = event.data;
+
+        const task = await prisma.task.findUnique({
+            where: { id: taskId },
+            include: {
+                assignee: true,
+                project: true,
+            },
+        });
+
+        if (!task) return;
+
+        await sendEmail({
+            to: task.assignee.email,
+            subject: `New task assignment in ${task.project.name}`,
+            body: `
           <p>Hi ${task.assignee.name}</p>
           <p>${task.title}</p>
           <a href="${origin}">View Task</a>
         `,
-      });
-  
-      if (
-        new Date(task.due_date).toDateString() !==
-        new Date().toDateString()
-      ) {
-        await step.sleepUntil(
-          "wait-for-the-due-date",
-          new Date(task.due_date)
-        );
-  
-        await step.run("check-if-task-is-completed", async () => {
-          const updatedTask = await prisma.task.findUnique({
-            where: { id: taskId },
-            include: {
-              assignee: true,
-              project: true,
-            },
-          });
-  
-          if (!updatedTask) return;
-  
-          if (updatedTask.status !== "DONE") {
-            await step.run("send-task-reminder-email", async () => {
-              await sendEmail({
-                to: updatedTask.assignee.email,
-                subject: `Reminder for ${updatedTask.project.name}`,
-                body: `
+        });
+
+        if (
+            new Date(task.due_date).toDateString() !==
+            new Date().toDateString()
+        ) {
+            await step.sleepUntil(
+                "wait-for-the-due-date",
+                new Date(task.due_date)
+            );
+
+            await step.run("check-if-task-is-completed", async() => {
+                const updatedTask = await prisma.task.findUnique({
+                    where: { id: taskId },
+                    include: {
+                        assignee: true,
+                        project: true,
+                    },
+                });
+
+                if (!updatedTask) return;
+
+                if (updatedTask.status !== "DONE") {
+                    await step.run("send-task-reminder-email", async() => {
+                        await sendEmail({
+                            to: updatedTask.assignee.email,
+                            subject: `Reminder for ${updatedTask.project.name}`,
+                            body: `
                   <p>Hi ${updatedTask.assignee.name}</p>
                   <p>${updatedTask.title}</p>
                   <a href="${origin}">View Task</a>
                 `,
-              });
+                        });
+                    });
+                }
             });
-          }
-        });
-      }
+        }
     }
-  );
+);
 // Create an empty array where we'll export future Inngest functions
-export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdation, syncWorkspaceCreation ,syncWorkspaceDeletion, syncWorkspaceMemberCreation, syncWorkspaceUpdation, sendTaskAssignmentEmail];
+export const functions = [syncUserCreation, syncUserDeletion, syncUserUpdation, syncWorkspaceCreation, syncWorkspaceDeletion, syncWorkspaceMemberCreation, syncWorkspaceUpdation, sendTaskAssignmentEmail];
