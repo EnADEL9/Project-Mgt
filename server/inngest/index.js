@@ -5,21 +5,52 @@ import sendEmail from '../configs/nodemailer.js'
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "project-management" });
 
-// A function to save user to the database
+// // A function to save user to the database
+// const syncUserCreation = inngest.createFunction(
+//     { id: 'sync-user-from-clerk', triggers: { event: 'clerk/user.created' } },
+//     async ({ event }) => {
+//         const { data } = event
+//         await prisma.user.create({
+//             data: {
+//                 id: data.id,
+//                 email: data?.email_addresses?.[0]?.email_address,
+//                 name: data?.first_name + " " + data?.last_name,
+//                 image: data?.image_url
+//             }
+//         })
+//     }
+// )
+
+// A function to save or update a user in the database
 const syncUserCreation = inngest.createFunction(
     { id: 'sync-user-from-clerk', triggers: { event: 'clerk/user.created' } },
     async ({ event }) => {
-        const { data } = event
-        await prisma.user.create({
-            data: {
+        const { data } = event;
+
+        // Clean name construction avoiding "undefined undefined"
+        const firstName = data?.first_name || '';
+        const lastName = data?.last_name || '';
+        const name = `${firstName} ${lastName}`.trim() || 'User';
+
+        const email = data?.email_addresses?.[0]?.email_address || '';
+        const image = data?.image_url || '';
+
+        await prisma.user.upsert({
+            where: { id: data.id },
+            update: {
+                email,
+                name,
+                image
+            },
+            create: {
                 id: data.id,
-                email: data?.email_addresses?.[0]?.email_address,
-                name: data?.first_name + " " + data?.last_name,
-                image: data?.image_url
+                email,
+                name,
+                image
             }
-        })
+        });
     }
-)
+);
 
 // A function to delete user from database
 const syncUserDeletion = inngest.createFunction(
