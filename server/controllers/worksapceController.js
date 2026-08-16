@@ -3,7 +3,13 @@ import prisma from '../configs/prisma.js'
 // Get all workspaces for a member
 export const getUserWorkspaces = async(req, res) => {
     try {
-        const { userId } = await req.auth()
+        const auth = req.auth() // Clerk middleware returns req.auth as a function
+        const userId = auth?.userId
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' })
+        }
+
         const workspaces = await prisma.workspace.findMany({
             where: {
                 members: { some: { userId: userId } }
@@ -20,18 +26,19 @@ export const getUserWorkspaces = async(req, res) => {
             }
 
         })
-        res.json({ workspaces })
+        return res.json({ workspaces })
 
     } catch (error) {
         console.log(error)
-        res.status(500).json({ message: error.code || error.message })
+        return res.status(500).json({ message: error.code || error.message })
     }
 }
 
 // Add member to workspace
 export const addMember = async(req, res) => {
     try {
-        const { userId } = req.auth()
+        const auth = req.auth() // Clerk middleware returns req.auth as a function
+        const userId = auth?.userId
         const { email, role, workspaceId, message } = req.body
 
         // Check if user exist

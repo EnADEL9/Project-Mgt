@@ -1,15 +1,22 @@
-import { profileEnd } from "node:console"
 import prisma from "../configs/prisma.js"
-
 
 export const addComment = async(req, res) => {
     try {
-        const { userId } = await req.auth()
+        const auth = req.auth()
+        const userId = auth?.userId
         const { content, taskId } = req.body
+
+        if (!taskId || !content?.trim()) {
+            return res.status(400).json({ message: "Task id and content are required" })
+        }
 
         const task = await prisma.task.findUnique({
             where: { id: taskId }
         })
+
+        if (!task) {
+            return res.status(404).json({ message: "Task not found" })
+        }
 
         const project = await prisma.project.findUnique({
             where: { id: task.projectId },
@@ -23,18 +30,18 @@ export const addComment = async(req, res) => {
         const member = project.members.find((member) => member.userId === userId)
 
         if (!member) {
-            return res.status(403).json({ message: "You are not member of this project" })
+            return res.status(403).json({ message: "You are not a member of this project" })
         }
 
         const comment = await prisma.comment.create({
-            data: { taskId, content, userId },
+            data: { taskId, content: content.trim(), userId },
             include: { user: true }
         })
 
-        res.json({ message })
+        return res.json({ comment, message: "Comment added successfully" })
     } catch (error) {
         console.log(error)
-        res.status(500).json({ message: error.code || error.message })
+        return res.status(500).json({ message: error.code || error.message })
     }
 }
 
@@ -42,14 +49,20 @@ export const addComment = async(req, res) => {
 export const getTaskComments = async(req, res) => {
     try {
         const { taskId } = req.params
+
+        if (!taskId) {
+            return res.status(400).json({ message: "Task id is required" })
+        }
+
         const comments = await prisma.comment.findMany({
             where: { taskId },
-            include: { user: true }
+            include: { user: true },
+            orderBy: { createdAt: 'asc' }
         })
 
-        res.json({ comments })
+        return res.json({ comments })
     } catch (error) {
         console.log(error)
-        res.status(500).json({ message: error.code || error.message })
+        return res.status(500).json({ message: error.code || error.message })
     }
 }

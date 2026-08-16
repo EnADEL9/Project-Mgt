@@ -1,6 +1,7 @@
 const protect = async(req, res, next) => {
     try {
-        const { userId } = req.auth;
+        const auth = req.auth() // Clerk middleware returns req.auth as a function
+        const userId = auth?.userId
 
         if (!userId) {
             return res.status(401).json({ message: 'Unauthorized' })
