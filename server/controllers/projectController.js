@@ -80,6 +80,10 @@ export const updateProject = async(req, res) => {
         const userId = auth?.userId
         const { id, workspaceId, name, description, status, start_date, end_date, progress, priority } = req.body
 
+        if (!id || !workspaceId) {
+            return res.status(400).json({ message: "Project id and workspace id are required" })
+        }
+
         const workspace = await prisma.workspace.findUnique({
             where: { id: workspaceId },
             include: { members: { include: { user: true } } }
