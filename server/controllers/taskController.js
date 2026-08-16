@@ -6,7 +6,7 @@ import { inngest } from "../inngest/index.js"
 export const createTask = async(req, res) => {
     try {
         const auth = req.auth() // Clerk middleware returns req.auth as a function
-        const userId = auth?.userId
+        const userId = auth ? .userId
         const { projectId, title, description, type, status, priority, assigneeId, due_date } = req.body
         const origin = req.get('origin') || process.env.CLIENT_URL || 'http://localhost:5173'
 
@@ -51,7 +51,7 @@ export const createTask = async(req, res) => {
             include: { assignee: true, project: true }
         })
 
-        if (taskWithAssignee?.assignee?.email) {
+        if (taskWithAssignee ? .assignee ? .email) {
             await sendEmail({
                 to: taskWithAssignee.assignee.email,
                 subject: `New task assigned: ${taskWithAssignee.title}`,
@@ -93,7 +93,7 @@ export const createTask = async(req, res) => {
 export const updateTask = async(req, res) => {
     try {
         const auth = req.auth()
-        const userId = auth?.userId
+        const userId = auth ? .userId
         const { id } = req.params
         const { status, title, description, priority, type, due_date, assigneeId } = req.body
 
@@ -143,10 +143,10 @@ export const updateTask = async(req, res) => {
 export const deleteTask = async(req, res) => {
     try {
         const auth = req.auth()
-        const userId = auth?.userId
+        const userId = auth ? .userId
         const { taskId, tasksIds } = req.body
 
-        const rawIds = taskId ?? tasksIds ?? []
+        const rawIds = taskId ? ? tasksIds ? ? []
         const taskIds = (Array.isArray(rawIds) ? rawIds : [rawIds]).filter(Boolean)
 
         if (!taskIds.length) {

@@ -11,9 +11,9 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const sendEmail = async ({ to, subject, body }) => {
+const sendEmail = async({ to, subject, body }) => {
     if (!to || !subject || !body) {
-        console.error("Email request missing required fields.", { to, subject, bodyLength: body?.length || 0 });
+        console.error("Email request missing required fields.", { to, subject, bodyLength: body ? .length || 0 });
         return null;
     }
 

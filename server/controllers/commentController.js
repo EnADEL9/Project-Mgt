@@ -3,10 +3,10 @@ import prisma from "../configs/prisma.js"
 export const addComment = async(req, res) => {
     try {
         const auth = req.auth()
-        const userId = auth?.userId
+        const userId = auth ? .userId
         const { content, taskId } = req.body
 
-        if (!taskId || !content?.trim()) {
+        if (!taskId || !content ? .trim()) {
             return res.status(400).json({ message: "Task id and content are required" })
         }
 
