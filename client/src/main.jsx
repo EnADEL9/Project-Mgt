@@ -14,8 +14,10 @@ if (!PUBLISHABLE_KEY) {
 
 createRoot(document.getElementById('root')).render(
     <BrowserRouter>
-        <ClerkProvider publishableKey={PUBLISHABLE_KEY} fallbackRedirectUrl="/" 
-  forceRedirectUrl="/">
+        <ClerkProvider publishableKey={PUBLISHABLE_KEY} allowedRedirectOrigins={[
+        "https://project-mgt-omega-nine.vercel.app",
+        "http://localhost:5173"
+      ]}>
             <Provider store={store}>
                 <App />
             </Provider>
