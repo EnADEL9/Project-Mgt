@@ -15,15 +15,15 @@ const Layout = () => {
     const dispatch = useDispatch()
 
     const { user, isLoaded } = useUser()
-    const {getToken} = useAuth()
+    const { getToken } = useAuth()
 
     useEffect(() => {
         dispatch(loadTheme())
     }, [dispatch])
 
     useEffect(() => {
-        if(isLoaded && user && workspaces.length === 0){
-            dispatch(fetchWorkspaces({getToken}))
+        if (isLoaded && user && workspaces.length === 0) {
+            dispatch(fetchWorkspaces({ getToken }))
         }
     }, [isLoaded, user])
 
@@ -38,8 +38,10 @@ const Layout = () => {
     if (!user) {
         return (
             <div className="flex justify-center items-center h-screen bg-white dark:bg-zinc-950">
-                <SignIn />
-            </div>
+                <SignIn
+                    fallbackRedirectUrl="/"
+                    forceRedirectUrl="/"
+                />            </div>
         )
     }
 
@@ -51,7 +53,7 @@ const Layout = () => {
         )
     }
 
-    if(user && workspaces.length === 0){
+    if (user && workspaces.length === 0) {
         return (
             <div className='min-h-screen flex justify-center items-center'>
                 <CreateOrganization />
